@@ -160,7 +160,7 @@ var config = {
             description: "Between both routes, the N Judah is significantly faster reaching downtown, sometimes by over twenty minutes. This time saving is multiplied by hundreds of rides for frequent users, equating to hours of difference in transit time.",
             location: {
                 center: [-122.38361, 37.78276],
-                zoom: 12,
+                zoom: 11.3,
                 pitch: 47.5,
                 bearing: 178,
                 speed: .5
@@ -176,7 +176,7 @@ var config = {
             description: "Comparing travel time consistency, the N Judah also has less variability in travel times.",
             location: {
                 center: [-122.38361, 37.78276],
-                zoom: 12,
+                zoom: 11.3,
                 pitch: 47.5,
                 bearing: 178,
                 speed: .5
@@ -204,7 +204,7 @@ var config = {
             description: "Plagued by reliability issues and slow travel times, the T Third route provides limited connectivity to the Bayview. Based on feedback from the community, San Francisco’s transit agency recently re-introduced a bus route that follows a similar route to the T.",
             location: {
                 center: [-122.38361, 37.78276],
-                zoom: 12,
+                zoom: 11.3,
                 pitch: 47.5,
                 bearing: 178,
                 speed: .5
@@ -219,7 +219,7 @@ var config = {
             description: "While both the Sunset and Bayview have a rail connection to Downtown San Francisco, the Sunset’s N Judah provides reasonably efficient transportation to the city’s job center while the Bayview’s T Third continues to isolate the community from opportunities.",
             location: {
                 center: [-122.38361, 37.78276],
-                zoom: 12,
+                zoom: 11.3,
                 pitch: 47.5,
                 bearing: 178,
                 speed: .5
