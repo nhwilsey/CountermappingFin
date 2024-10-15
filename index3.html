@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8' />
+    <title>SF Transit</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v2.0.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v2.0.0/mapbox-gl.css' rel='stylesheet' />
+    <script src="https://unpkg.com/intersection-observer@0.5.1/intersection-observer.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
+    <script src="https://unpkg.com/scrollama"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Helvetica', sans-serif;
+        }
+
+        a,
+        a:hover,
+        a:visited {
+            color: #0071bc;
+        }
+
+        #map {
+            top: 0;
+            height: 100vh;
+            width: 100vw;
+            position: fixed;
+            /* position: absolute; */
+            z-index: -5;
+        }
+
+        #header {
+            margin: auto;
+            width: 100%;
+            position: relative;
+            z-index: 5;
+            background-image: url("data/muni_bus.jpg");
+            background-position: top;
+            background-repeat: no-repeat;
+            background-size: 100vw 100vh;
+            height: 170vh;
+        }
+
+        #header h1,
+        #header h2,
+        #header p {
+            margin: 0;
+            padding: 2vh 2vw;
+            text-align: center;
+            color: white;
+        }
+
+        #header h2 {
+            padding-bottom: 70vh;
+        }
+
+        #header p {
+            font-size: 1.4vh;
+            text-align: justify;
+            margin-left: 30vw;
+            margin-right: 30vw;
+            color: black;
+        }
+
+        #header h1 {
+            font-size: 7vh;
+            color: white;
+            padding-top: 15vh;
+        }
+
+        #footer {
+            width: 100%;
+            min-height: 5vh;
+            padding-top: 2vh;
+            padding-bottom: 2vh;
+            text-align: center;
+            line-height: 25px;
+            font-size: 13px;
+        }
+
+        #features {
+            padding-top: 10vh;
+            padding-bottom: 10vh;
+            z-index: 100;
+        }
+
+        .centered {
+            width: 50vw;
+            margin: 0 auto;
+        }
+
+        .lefty {
+            width: 33vw;
+            margin-left: 5vw;
+        }
+
+        .righty {
+            width: 33vw;
+            margin-left: 62vw;
+        }
+
+        .light {
+            color: #444;
+            background-color: #fafafa;
+        }
+
+        .dark {
+            color: #fafafa;
+            background-color: #444;
+        }
+
+        .step {
+            padding-bottom: 50vh;
+            /* margin-bottom: 10vh; */
+            opacity: 0.25;
+        }
+
+        .step.active {
+            opacity: 0.9;
+        }
+
+        .step div {
+            padding: 25px 50px;
+            line-height: 25px;
+            font-size: 13px;
+        }
+
+        .step img {
+            width: 100%;
+        }
+
+
+        .legend {
+            background-color: #fff;
+            border-radius: 3px;
+            bottom: 25px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            padding: 10px;
+            display: none;
+            position: fixed;
+            right: 15px;
+            z-index: 3;
+        }
+
+        .legend h3 {
+            margin: 0 0 0px;
+        }
+
+        .legend h4 {
+            margin: 0 0 0px;
+        }
+
+
+        .span_route_legend {
+            border-radius: 20px;
+            display: inline-block;
+            height: 5px;
+            margin-right: 5px;
+            margin-left: 0;
+            margin-bottom: 2px;
+            width: 15px;
+        }
+
+        .span_speed_legend {
+            border-radius: 50%;
+            display: inline-block;
+            height: 10px;
+            margin-right: 5px;
+            margin-left: 3px;
+            width: 10px;
+        }
+
+        .span_neig_legend {
+            border-radius: 2px;
+            display: inline-block;
+            height: 10px;
+            margin-right: 5px;
+            width: 10px;
+        }
+
+        #story {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* @media (max-width: 750px) {
+            #features {
+                width: 90vw;
+                margin: 0 auto;
+            }
+        } */
+    </style>
+</head>
+
+<body>
+
+    <div id="map"></div>
+    <div id="story"></div>
+    <div id="state-legend" class="legend">
+        <h4 id="minutesLabel">Time Elapsed: </h4>
+        <h4 id="route_label">Routes:</h4>
+        <div id="legend_N"><span class="span_route_legend" style="background-color: #3A0CA3"></span>N Judah</div>
+        <div id="legend_T"><span class="span_route_legend" style="background-color: #E4572E"></span>T Third</div>
+        <div id="legend_38"><span class="span_route_legend" style="background-color: #3A0CA3"></span>38 Geary</div>
+        <div id="legend_14"><span class="span_route_legend" style="background-color: #E4572E"></span>14 Mission</div>
+        <h4 id="progress_label">Progress along route:</h4>
+        <div id="progress_fast"><span class="span_speed_legend" style="background-color: #02a12f"></span>80th
+            Percentile Speed</div>
+        <div id="progress_slow"><span class="span_speed_legend" style="background-color: #a10202"></span>20th
+            Percentile Speed</div>
+        <h4>Neighborhoods:</h4>
+        <div id="legend_sun"><span class="span_neig_legend" style="background-color: #c94d62"></span>Sunset</div>
+        <div id="legend_bay"><span class="span_neig_legend" style="background-color: #fa9c61"></span>Bayview</div>
+        <div id="legend_ric"><span class="span_neig_legend" style="background-color: #f2de6e"></span>Richmond</div>
+        <div id="legend_exc"><span class="span_neig_legend" style="background-color: #76d0b4"></span>Excelsior/Crocker
+            Amazon</div>
+        <div id="legend_dow"><span class="span_neig_legend" style="background-color: #7f599e"></span>Downtown</div>
+    </div>
+
+    <script src="./config3.js"></script>
+    <script src="./js/drive3.js"></script>
+    <script>
+
+        // configuration
+        var layerTypes = {
+            'fill': ['fill-opacity'],
+            'line': ['line-opacity'],
+            'circle': ['circle-opacity', 'circle-stroke-opacity'],
+            'symbol': ['icon-opacity', 'text-opacity'],
+            'raster': ['raster-opacity'],
+            'fill-extrusion': ['fill-extrusion-opacity']
+        }
+
+        var alignments = {
+            'left': 'lefty',
+            'center': 'centered',
+            'right': 'righty',
+            'full': 'fully'
+        }
+
+        function getLayerPaintType(layer) {
+            var layerType = map.getLayer(layer).type;
+            return layerTypes[layerType];
+        }
+
+        function setLayerOpacity(layer) {
+            var paintProps = getLayerPaintType(layer.layer);
+            paintProps.forEach(function (prop) {
+                map.setPaintProperty(layer.layer, prop, layer.opacity);
+            });
+        }
+
+        // adding story elements----------------------------------
+        var story = document.getElementById('story');
+        var features = document.createElement('div');
+        features.classList.add(alignments[config.alignment]);
+        features.setAttribute('id', 'features');
+
+        var header = document.createElement('div');
+
+        if (config.title) {
+            var titleText = document.createElement('h1');
+            titleText.innerText = config.title;
+            header.appendChild(titleText);
+        }
+
+        if (config.subtitle) {
+            var subtitleText = document.createElement('h2');
+            subtitleText.innerText = config.subtitle;
+            header.appendChild(subtitleText);
+        }
+
+        if (config.byline) {
+            var bylineText = document.createElement('p');
+            bylineText.innerText = config.byline;
+            header.appendChild(bylineText);
+        }
+
+        if (config.para1) {
+            var bylineText = document.createElement('p');
+            bylineText.innerText = config.para1;
+            header.appendChild(bylineText);
+        }
+
+        if (config.para2) {
+            var bylineText = document.createElement('p');
+            bylineText.innerText = config.para2;
+            header.appendChild(bylineText);
+        }
+
+        if (config.para3) {
+            var bylineText = document.createElement('p');
+            bylineText.innerText = config.para3;
+            header.appendChild(bylineText);
+        }
+
+        if (header.innerText.length > 0) {
+            header.classList.add(config.theme);
+            header.setAttribute('id', 'header');
+            story.appendChild(header);
+        }
+
+        config.chapters.forEach((record, idx) => {
+            var legend = document.createElement('div');
+            var container = document.createElement('div');
+            var chapter = document.createElement('div');
+
+            if (record.title) {
+                var title = document.createElement('h3');
+                title.innerText = record.title;
+                chapter.appendChild(title);
+            }
+
+            if (record.image) {
+                var image = new Image();
+                image.src = record.image;
+                chapter.appendChild(image);
+            }
+
+            if (record.description) {
+                var story = document.createElement('p');
+                story.innerHTML = record.description;
+                chapter.appendChild(story);
+            }
+
+            container.setAttribute('id', record.id);
+            container.classList.add('step');
+            if (idx === 0) {
+                container.classList.add('active');
+            }
+
+            chapter.classList.add(config.theme);
+            container.appendChild(chapter);
+            features.appendChild(container);
+            container.classList.add(alignments[record.alignment] || 'left');
+        });
+
+        story.appendChild(features);
+
+        var footer = document.createElement('div');
+
+        if (config.footer) {
+            var footerText = document.createElement('p');
+            footerText.innerHTML = '<a href="https://docs.google.com/document/d/1sxpCP0CRvKKBdRXi5K5z9SZnA1gfMhkg-TL-b57B0N0/edit?usp=sharing">' + config.footer + '</a>';
+            footer.appendChild(footerText);
+        }
+
+        if (footer.innerText.length > 0) {
+            footer.classList.add(config.theme);
+            footer.setAttribute('id', 'footer');
+            story.appendChild(footer);
+        }
+
+
+        //adding map ------------------------------
+
+        mapboxgl.accessToken = config.accessToken;
+
+        const transformRequest = (url) => {
+            const hasQuery = url.indexOf("?") !== -1;
+            const suffix = hasQuery ? "&pluginName=scrollytellingV2" : "?pluginName=scrollytellingV2";
+
+            return {
+                url: url + suffix
+            }
+        }
+
+        var map = new mapboxgl.Map({
+            container: 'map',
+            // style: config.style,
+            // style: 'mapbox://styles/nhwilsey/clphtkemy00ak01qj7r999r0d',
+            style: 'mapbox://styles/nhwilsey/clpj7127600d901p87v4zdz2b',
+            center: [-122.43955, 37.76483],
+            zoom: 8,
+            bearing: 0,
+            pitch: 30,
+            scrollZoom: false,
+            transformRequest: transformRequest
+        });
+
+        // if having a marker at the front, add here
+        // var marker = new mapboxgl.Marker();
+        // if (config.showMarkers) {
+        //     marker.setLngLat(config.chapters[0].location.center).addTo(map);
+        // }
+
+
+        // instantiate the scrollama
+        var scroller = scrollama();
+
+        const stateLegendEl = document.getElementById('state-legend');
+        const legend_N = document.getElementById('legend_N');
+        const legend_T = document.getElementById('legend_T');
+        const legend_38 = document.getElementById('legend_38');
+        const legend_14 = document.getElementById('legend_14');
+        const legend_sun = document.getElementById('legend_sun');
+        const legend_bay = document.getElementById('legend_bay');
+        const legend_ric = document.getElementById('legend_ric');
+        const legend_exc = document.getElementById('legend_exc');
+        const legend_dow = document.getElementById('legend_dow');
+        const progress_label = document.getElementById('progress_label');
+        const progress_fast = document.getElementById('progress_fast');
+        const progress_slow = document.getElementById('progress_slow');
+        const route_label = document.getElementById('route_label');
+
+        const minutesLabel = document.getElementById('minutesLabel');
+
+        function handleStepProgress(response) {
+            let stepProgress;
+
+            if (response.element.id.slice(0, 5) === 'drive') {
+                stateLegendEl.style.display = 'block';
+                legend_N.style.display = 'block';
+                legend_T.style.display = 'block';
+                legend_sun.style.display = 'block';
+                legend_bay.style.display = 'block';
+                legend_dow.style.display = 'block';
+                legend_38.style.display = 'none';
+                legend_14.style.display = 'none';
+                legend_ric.style.display = 'none';
+                legend_exc.style.display = 'none';
+
+                minutesLabel.style.display = 'block';
+                progress_label.style.display = 'block';
+                progress_fast.style.display = 'block';
+                progress_slow.style.display = 'block';
+                route_label.style.display = 'block';
+
+                let driveSlideNum = parseInt(response.element.id.slice(-1));
+                map.setLayoutProperty('animatedLine14', 'visibility', 'none');
+                map.setLayoutProperty('animatedLine38', 'visibility', 'none');
+                map.setLayoutProperty('animatedPoint14_25', 'visibility', 'none');
+                map.setLayoutProperty('animatedPoint14_75', 'visibility', 'none');
+                map.setLayoutProperty('animatedPoint38_25', 'visibility', 'none');
+                map.setLayoutProperty('animatedPoint38_75', 'visibility', 'none');
+
+                map.setLayoutProperty('animatedLineT', 'visibility', 'visible');
+                map.setLayoutProperty('animatedLineN', 'visibility', 'visible');
+                map.setLayoutProperty('animatedPointT_25', 'visibility', 'visible');
+                map.setLayoutProperty('animatedPointT_75', 'visibility', 'visible');
+                map.setLayoutProperty('animatedPointN_25', 'visibility', 'visible');
+                map.setLayoutProperty('animatedPointN_75', 'visibility', 'visible');
+                if (driveSlideNum === 0) {
+                    //if on the first slide, make them visable
+
+                    //driveSmoothness is the number of points on each route.
+                    //response.progress is progress of the current slide
+                    stepProgress = Math.round(response.progress * driveSmoothness);
+                } else {
+
+                    stepProgress = Math.round(response.progress * driveSmoothness + driveSmoothness * driveSlideNum);
+                }
+                var min_elapsed = Math.round(stepProgress * 0.2);
+                var label_string = "Time Elapsed: " + min_elapsed + " min"
+                minutesLabel.textContent = label_string
+                // changeCenter14(stepProgress);
+                // changeCenter38(stepProgress);
+                changeCenterT(stepProgress);
+                changeCenterN(stepProgress);
+            } else if (response.element.id.slice(0, 8) === 'busdrive') {
+                stateLegendEl.style.display = 'block';
+                legend_N.style.display = 'none';
+                legend_T.style.display = 'none';
+                legend_sun.style.display = 'none';
+                legend_bay.style.display = 'none';
+                legend_dow.style.display = 'block';
+                legend_38.style.display = 'block';
+                legend_14.style.display = 'block';
+                legend_ric.style.display = 'block';
+                legend_exc.style.display = 'block';
+
+                minutesLabel.style.display = 'block';
+                progress_label.style.display = 'block';
+                progress_fast.style.display = 'block';
+                progress_slow.style.display = 'block';
+                route_label.style.display = 'block';
+
+                let driveSlideNum = parseInt(response.element.id.slice(-1));
+                map.setLayoutProperty('animatedLine14', 'visibility', 'visible');
+                map.setLayoutProperty('animatedLine38', 'visibility', 'visible');
+                map.setLayoutProperty('animatedPoint14_25', 'visibility', 'visible');
+                map.setLayoutProperty('animatedPoint14_75', 'visibility', 'visible');
+                map.setLayoutProperty('animatedPoint38_25', 'visibility', 'visible');
+                map.setLayoutProperty('animatedPoint38_75', 'visibility', 'visible');
+
+                map.setLayoutProperty('animatedLineT', 'visibility', 'none');
+                map.setLayoutProperty('animatedLineN', 'visibility', 'none');
+                map.setLayoutProperty('animatedPointT_25', 'visibility', 'none');
+                map.setLayoutProperty('animatedPointT_75', 'visibility', 'none');
+                map.setLayoutProperty('animatedPointN_25', 'visibility', 'none');
+                map.setLayoutProperty('animatedPointN_75', 'visibility', 'none');
+                if (driveSlideNum === 0) {
+                    //if on the first slide, make them visable
+                    //driveSmoothness is the number of points on each route.
+                    //response.progress is progress of the current slide
+                    stepProgress = Math.round(response.progress * driveSmoothness);
+                } else {
+
+                    stepProgress = Math.round(response.progress * driveSmoothness + driveSmoothness * driveSlideNum);
+                }
+                var min_elapsed = Math.round(stepProgress * 0.2);
+                var label_string = "Time Elapsed: " + min_elapsed + " min"
+                minutesLabel.textContent = label_string
+                changeCenter14(stepProgress);
+                changeCenter38(stepProgress);
+                // changeCenterT(stepProgress);
+                // changeCenterN(stepProgress);
+            } else if (response.element.id === 'transit-lanes') {
+                legend_N.style.display = 'none';
+                legend_T.style.display = 'none';
+                legend_sun.style.display = 'block';
+                legend_bay.style.display = 'block';
+                legend_dow.style.display = 'block';
+                legend_38.style.display = 'none';
+                legend_14.style.display = 'none';
+                legend_ric.style.display = 'block';
+                legend_exc.style.display = 'block';
+
+                minutesLabel.style.display = 'none';
+                progress_label.style.display = 'none';
+                progress_fast.style.display = 'none';
+                progress_slow.style.display = 'none';
+                route_label.style.display = 'none';
+
+                map.setLayoutProperty('transit_lanes', 'visibility', 'visible');
+                map.setLayoutProperty('transit_projects', 'visibility', 'none');
+                stateLegendEl.style.display = 'block';
+            } else if (response.element.id === 'transit-projects') {
+                legend_N.style.display = 'none';
+                legend_T.style.display = 'none';
+                legend_sun.style.display = 'block';
+                legend_bay.style.display = 'block';
+                legend_dow.style.display = 'block';
+                legend_38.style.display = 'none';
+                legend_14.style.display = 'none';
+                legend_ric.style.display = 'block';
+                legend_exc.style.display = 'block';
+
+                minutesLabel.style.display = 'none';
+                progress_label.style.display = 'none';
+                progress_fast.style.display = 'none';
+                progress_slow.style.display = 'none';
+                route_label.style.display = 'none';
+
+                map.setLayoutProperty('transit_projects', 'visibility', 'visible');
+                map.setLayoutProperty('transit_lanes', 'visibility', 'none');
+                stateLegendEl.style.display = 'block';
+            } else if (response.element.id === 'all_routes') {
+                legend_N.style.display = 'none';
+                legend_T.style.display = 'none';
+                legend_sun.style.display = 'none';
+                legend_bay.style.display = 'none';
+                legend_dow.style.display = 'none';
+                legend_38.style.display = 'none';
+                legend_14.style.display = 'none';
+                legend_ric.style.display = 'none';
+                legend_exc.style.display = 'block';
+
+                minutesLabel.style.display = 'none';
+                progress_label.style.display = 'none';
+                progress_fast.style.display = 'none';
+                progress_slow.style.display = 'none';
+                route_label.style.display = 'none';
+
+                map.setLayoutProperty('transit_routes', 'visibility', 'visible');
+                stateLegendEl.style.display = 'none';
+            } else if (response.element.id.slice(0, 4) === 'info') {
+                legend_N.style.display = 'none';
+                legend_T.style.display = 'none';
+                legend_sun.style.display = 'block';
+                legend_bay.style.display = 'block';
+                legend_dow.style.display = 'block';
+                legend_38.style.display = 'none';
+                legend_14.style.display = 'none';
+                legend_ric.style.display = 'block';
+                legend_exc.style.display = 'block';
+
+                minutesLabel.style.display = 'none';
+                progress_label.style.display = 'none';
+                progress_fast.style.display = 'none';
+                progress_slow.style.display = 'none';
+                stateLegendEl.style.display = 'block';
+                route_label.style.display = 'none';
+
+                map.setLayoutProperty('transit_routes', 'visibility', 'none');
+                map.setLayoutProperty('transit_projects', 'visibility', 'none');
+                map.setLayoutProperty('transit_lanes', 'visibility', 'none');
+                map.setLayoutProperty('animatedLine14', 'visibility', 'none');
+                map.setLayoutProperty('animatedLine38', 'visibility', 'none');
+                map.setLayoutProperty('animatedPoint14_25', 'visibility', 'none');
+                map.setLayoutProperty('animatedPoint14_75', 'visibility', 'none');
+                map.setLayoutProperty('animatedPoint38_25', 'visibility', 'none');
+                map.setLayoutProperty('animatedPoint38_75', 'visibility', 'none');
+
+                map.setLayoutProperty('animatedLineT', 'visibility', 'none');
+                map.setLayoutProperty('animatedLineN', 'visibility', 'none');
+                map.setLayoutProperty('animatedPointT_25', 'visibility', 'none');
+                map.setLayoutProperty('animatedPointT_75', 'visibility', 'none');
+                map.setLayoutProperty('animatedPointN_25', 'visibility', 'none');
+                map.setLayoutProperty('animatedPointN_75', 'visibility', 'none');
+
+
+            } else {
+                legend_N.style.display = 'none';
+                legend_T.style.display = 'none';
+                legend_ric.style.display = 'none';
+                legend_bay.style.display = 'none';
+                legend_dow.style.display = 'none';
+                legend_38.style.display = 'none';
+                legend_14.style.display = 'none';
+                legend_ric.style.display = 'none';
+                legend_exc.style.display = 'none';
+                map.setLayoutProperty('transit_routes', 'visibility', 'none');
+                map.setLayoutProperty('transit_projects', 'visibility', 'none');
+                map.setLayoutProperty('transit_lanes', 'visibility', 'none');
+                map.setLayoutProperty('animatedLine14', 'visibility', 'none');
+                map.setLayoutProperty('animatedLine38', 'visibility', 'none');
+                map.setLayoutProperty('animatedPoint14_25', 'visibility', 'none');
+                map.setLayoutProperty('animatedPoint14_75', 'visibility', 'none');
+                map.setLayoutProperty('animatedPoint38_25', 'visibility', 'none');
+                map.setLayoutProperty('animatedPoint38_75', 'visibility', 'none');
+
+                map.setLayoutProperty('animatedLineT', 'visibility', 'none');
+                map.setLayoutProperty('animatedLineN', 'visibility', 'none');
+                map.setLayoutProperty('animatedPointT_25', 'visibility', 'none');
+                map.setLayoutProperty('animatedPointT_75', 'visibility', 'none');
+                map.setLayoutProperty('animatedPointN_25', 'visibility', 'none');
+                map.setLayoutProperty('animatedPointN_75', 'visibility', 'none');
+
+                stateLegendEl.style.display = 'none';
+            }
+        }
+
+
+
+        map.on("load", function () {
+
+            let w = window.innerWidth;
+            let initBounds = routeData14.features[0].geometry.coordinates;
+
+            if (followPoint === false) {
+                var bounds = initBounds.reduce(function (bounds, coord) {
+                    return bounds.extend(coord);
+                }, new mapboxgl.LngLatBounds(initBounds[0], initBounds[0]));
+
+                if (w >= 500) {
+                    map.fitBounds(bounds, {
+                        padding: { top: 150, bottom: 150, right: -100, left: 200 },
+                        duration: 0
+                    });
+                } else {
+                    map.fitBounds(bounds, {
+                        padding: 20,
+                        duration: 0
+                    });
+                }
+            } else {
+                map.setZoom(followZoomLevel);
+                map.setBearing(followBearing);
+                map.setPitch(followPitch);
+            }
+
+            map.addSource('lineSource14', {
+                "type": "geojson",
+                "data": geojsonPoint14_25
+            });
+
+            map.addSource('lineSource38', {
+                "type": "geojson",
+                "data": geojsonPoint38_25
+            });
+
+            map.addSource('lineSourceT', {
+                "type": "geojson",
+                "data": geojsonPointT_25
+            });
+
+            map.addSource('lineSourceN', {
+                "type": "geojson",
+                "data": geojsonPointN_25
+            });
+
+            map.addSource('pointSource14_25', {
+                "type": "geojson",
+                "data": geojsonPoint14_25
+            });
+
+            map.addSource('pointSource14_75', {
+                "type": "geojson",
+                "data": geojsonPoint14_75
+            });
+
+            map.addSource('pointSource38_25', {
+                "type": "geojson",
+                "data": geojsonPoint38_25
+            });
+
+            map.addSource('pointSource38_75', {
+                "type": "geojson",
+                "data": geojsonPoint38_75
+            });
+
+            map.addSource('pointSourceT_25', {
+                "type": "geojson",
+                "data": geojsonPointT_25
+            });
+
+            map.addSource('pointSourceT_75', {
+                "type": "geojson",
+                "data": geojsonPointT_75
+            });
+
+            map.addSource('pointSourceN_25', {
+                "type": "geojson",
+                "data": geojsonPointN_25
+            });
+
+            map.addSource('pointSourceN_75', {
+                "type": "geojson",
+                "data": geojsonPointN_75
+            });
+
+            map.addSource('transit_lanes', {
+                "type": "geojson",
+                "data": 'data/Transit_Only_Lanes.geojson'
+            });
+
+            map.addSource('transit_projects', {
+                "type": "geojson",
+                "data": 'data/SFMTA_Projects_Lines.geojson'
+            });
+
+            map.addSource('transit_routes', {
+                "type": "geojson",
+                "data": 'data/Muni_Simple_Routes.geojson'
+            });
+
+            map.addLayer({
+                "id": "animatedLine14",
+                "type": "line",
+                "source": "lineSource14",
+                'paint': {
+                    'line-opacity': 1,
+                    'line-color': '#E4572E',
+                    'line-width': 4
+                },
+                'layout': {
+                    'visibility': 'none'
+                }
+            });
+
+            map.addLayer({
+                "id": "animatedPoint14_75",
+                "type": "circle",
+                "source": "pointSource14_75",
+                'paint': {
+                    'circle-radius': 5,
+                    'circle-opacity': 1,
+                    'circle-color': '#a10202'
+                },
+                'layout': {
+                    'visibility': 'none'
+                }
+            });
+
+            map.addLayer({
+                "id": "animatedPoint14_25",
+                "type": "circle",
+                "source": "pointSource14_25",
+                'paint': {
+                    'circle-radius': 5,
+                    'circle-opacity': 1,
+                    'circle-color': '#02a12f'
+                },
+                'layout': {
+                    'visibility': 'none'
+                }
+            });
+
+            map.addLayer({
+                "id": "animatedLine38",
+                "type": "line",
+                "source": "lineSource38",
+                'paint': {
+                    'line-opacity': 1,
+                    'line-color': '#3A0CA3',
+                    'line-width': 4
+                },
+                'layout': {
+                    'visibility': 'none'
+                }
+            });
+
+            map.addLayer({
+                "id": "animatedPoint38_75",
+                "type": "circle",
+                "source": "pointSource38_75",
+                'paint': {
+                    'circle-radius': 5,
+                    'circle-opacity': 1,
+                    'circle-color': '#a10202'
+                },
+                'layout': {
+                    'visibility': 'none'
+                }
+            });
+
+            map.addLayer({
+                "id": "animatedPoint38_25",
+                "type": "circle",
+                "source": "pointSource38_25",
+                'paint': {
+                    'circle-radius': 5,
+                    'circle-opacity': 1,
+                    'circle-color': '#02a12f'
+                },
+                'layout': {
+                    'visibility': 'none'
+                }
+            });
+
+
+
+            map.addLayer({
+                "id": "animatedLineT",
+                "type": "line",
+                "source": "lineSourceT",
+                'paint': {
+                    'line-opacity': 1,
+                    'line-color': '#E4572E',
+                    'line-width': 4
+                },
+                'layout': {
+                    'visibility': 'none'
+                }
+            });
+
+            map.addLayer({
+                "id": "animatedPointT_75",
+                "type": "circle",
+                "source": "pointSourceT_75",
+                'paint': {
+                    'circle-radius': 5,
+                    'circle-opacity': 1,
+                    'circle-color': '#a10202'
+                },
+                'layout': {
+                    'visibility': 'none'
+                }
+            });
+
+            map.addLayer({
+                "id": "animatedPointT_25",
+                "type": "circle",
+                "source": "pointSourceT_25",
+                'paint': {
+                    'circle-radius': 5,
+                    'circle-opacity': 1,
+                    'circle-color': '#02a12f'
+                },
+                'layout': {
+                    'visibility': 'none'
+                }
+            });
+
+
+
+            map.addLayer({
+                "id": "animatedLineN",
+                "type": "line",
+                "source": "lineSourceN",
+                'paint': {
+                    'line-opacity': 1,
+                    'line-color': '#3A0CA3',
+                    'line-width': 4
+                },
+                'layout': {
+                    'visibility': 'none'
+                }
+            });
+
+            map.addLayer({
+                "id": "animatedPointN_75",
+                "type": "circle",
+                "source": "pointSourceN_75",
+                'paint': {
+                    'circle-radius': 5,
+                    'circle-opacity': 1,
+                    'circle-color': '#a10202'
+                },
+                'layout': {
+                    'visibility': 'none'
+                }
+            });
+
+            map.addLayer({
+                "id": "animatedPointN_25",
+                "type": "circle",
+                "source": "pointSourceN_25",
+                'paint': {
+                    'circle-radius': 5,
+                    'circle-opacity': 1,
+                    'circle-color': '#02a12f'
+                },
+                'layout': {
+                    'visibility': 'none'
+                }
+            });
+
+
+            map.addLayer({
+                "id": "transit_lanes",
+                "type": "line",
+                "source": "transit_lanes",
+                'paint': {
+                    'line-opacity': 1,
+                    'line-color': '#d60909',
+                    'line-width': 4
+                },
+                'layout': {
+                    'visibility': 'none'
+                }
+            });
+
+            map.addLayer({
+                "id": "transit_projects",
+                "type": "line",
+                "source": "transit_projects",
+                'paint': {
+                    'line-opacity': 1,
+                    'line-color': '#051aa1',
+                    'line-width': 3
+                },
+                'layout': {
+                    'visibility': 'none'
+                }
+            });
+
+            map.addLayer({
+                "id": "transit_routes",
+                "type": "line",
+                "source": "transit_routes",
+                'paint': {
+                    'line-opacity': 1,
+                    'line-color': '#051aa1',
+                    'line-width': 1.5
+                },
+                'layout': {
+                    'visibility': 'none'
+                }
+            });
+
+
+            // setup the instance, pass callback functions
+            scroller
+                .setup({
+                    step: '.step',
+                    offset: 0.5,
+                    progress: true
+                })
+                .onStepEnter(response => {
+                    var chapter = config.chapters.find(chap => chap.id === response.element.id);
+                    response.element.classList.add('active');
+                    map[chapter.mapAnimation || 'flyTo'](chapter.location);
+                    if (config.inset) {
+                        if (chapter.location.zoom < 5) {
+                            insetMap.flyTo({ center: chapter.location.center, zoom: 0 });
+                        }
+                        else {
+                            insetMap.flyTo({ center: chapter.location.center, zoom: 3 });
+                        }
+                    }
+                    if (config.showMarkers) {
+                        marker.setLngLat(chapter.location.center);
+                    }
+                    if (chapter.onChapterEnter.length > 0) {
+                        chapter.onChapterEnter.forEach(setLayerOpacity);
+                    }
+                    if (chapter.rotateAnimation) {
+                        map.once('moveend', () => {
+                            const rotateNumber = map.getBearing();
+                            map.rotateTo(rotateNumber + 180, {
+                                duration: 30000, easing: function (t) {
+                                    return t;
+                                }
+                            });
+                        });
+                    }
+                })
+                .onStepExit(response => {
+                    var chapter = config.chapters.find(chap => chap.id === response.element.id);
+                    response.element.classList.remove('active');
+                    if (chapter.onChapterExit.length > 0) {
+                        chapter.onChapterExit.forEach(setLayerOpacity);
+                    }
+                })
+                .onStepProgress(handleStepProgress);
+
+            createLine14();
+            createLine38();
+            createLineT();
+            createLineN();
+        });
+
+        // setup resize event
+        window.addEventListener('resize', scroller.resize);
+
+        $(document).ready(function () {
+            $.ajax({
+                // url:"./data/highwaydrive.geojson",
+                url: "data/routes14.geojson",
+                dataType: "json",
+                success: function (data) {
+                    routeData14 = data;
+                },
+                error: function () {
+                    console.log('error loading data');
+                }
+            });
+            $.ajax({
+                url: "data/routes38.geojson",
+                dataType: "json",
+                success: function (data) {
+                    routeData38 = data;
+                },
+                error: function () {
+                    console.log('error loading data');
+                }
+            });
+            $.ajax({
+                url: "data/routesT.geojson",
+                dataType: "json",
+                success: function (data) {
+                    routeDataT = data;
+                },
+                error: function () {
+                    console.log('error loading data');
+                }
+            });
+            $.ajax({
+                url: "data/routesN.geojson",
+                dataType: "json",
+                success: function (data) {
+                    routeDataN = data;
+                },
+                error: function () {
+                    console.log('error loading data');
+                }
+            });
+        });
+
+    </script>
+
+</body>
+
+</html>
