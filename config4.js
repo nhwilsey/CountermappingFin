@@ -113,7 +113,7 @@ var config = {
             description: "The Sunset and Bayview both have light rail routes providing a connection to downtown. At a similar length, they provide an opportunity to compare transportation quality. The N Judah serves the Sunset and the T Third serves the Bayview",
             location: {
                 center: [-122.48379, 37.75902],
-                zoom: 11,
+                zoom: 10.3,
                 pitch: 0,
                 bearing: 0,
                 speed: .5
@@ -130,7 +130,7 @@ var config = {
             description: "The N Judah light rail route began operation in 1928 and has received consistent upgrades since. These have included constructing new tunnels, transit-only lanes, and transit signal priority. The route serves tens of thousands of riders per day.",
             location: {
                 center: [-122.48379, 37.75902],
-                zoom: 11,
+                zoom: 10.3,
                 pitch: 0,
                 bearing: 0,
                 speed: .5
@@ -145,7 +145,7 @@ var config = {
             description: "The T Third light rail route began operation in 2007 to bring transit service to the underserved community along the Third Street Corridor. Despite being newer, it has not received similar transit priority over private vehicles along its route. A tunnel was recently constructed, but ridership is still much lower than the N.",
             location: {
                 center: [-122.48379, 37.75902],
-                zoom: 11,
+                zoom: 10.4,
                 pitch: 0,
                 bearing: 0,
                 speed: .5
