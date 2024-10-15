@@ -378,7 +378,7 @@ var config = {
             description: "The Ratio of Income to Poverty Level is a calculation of the total family income divided by the poverty threshold. A ratio less than 1 signifies that the income falls below the poverty level, indicating financial hardship. When the ratio equals 1, it signifies parity between income and the poverty level, while a ratio greater than 1 suggests that the income surpasses the poverty threshold, reflecting a relatively more favorable economic situation. Analyzing specific districts in this context reveals notable disparities. For instance, the Bayview District exhibits the highest percentage of residents with a ratio below 1, highlighting a prevalence of economic disadvantage. In contrast, the Sunset District has the highest percentage of residents with a ratio above 1, indicating a higher economic standing. This pattern extends to a comparison between the Richmond District and Excelsior & Crocker-Amazon, with the former having a lower proportion of individuals with a ratio under 1, illustrating a comparatively lower prevalence of economic hardship.",
             location: {
                 center: [-122.55892, 37.75359],
-                zoom: 10.5,
+                zoom: 9.5,
                 pitch: 0,
                 bearing: 0,
                 speed: .5
@@ -394,7 +394,7 @@ var config = {
             description: "Examining racial differences in San Francisco's neighborhoods provides crucial context for understanding economic disparities. Historically, marginalized communities, particularly Black Americans, have faced economic challenges, a trend evident in the four focal neighborhoods. The Bayview District, characterized by lower affluence, demonstrates this pattern, with 42.44% of its population identifying as Black and 26.43% belonging to another race (excluding Asian and White). In stark contrast, the Sunset District has only 1.6% Black residents. A different dynamic unfolds in the comparison between the Richmond District and Excelsior & Crocker-Amazon. While both neighborhoods have a similar low percentage of Black residents (slightly above 2%), the Richmond District exhibits less diversity, with 46.05% White residents, compared to Excelsior & Crocker-Amazon's 20.9%. This interplay of racial demographics, coupled with variations in poverty levels, paints a nuanced picture of San Francisco's socio-economic landscape, highlighting a division between predominantly White and affluent areas and those with a historical and persisting experience of marginalization.",
             location: {
                 center: [-122.55892, 37.75359],
-                zoom: 10.5,
+                zoom: 9.5,
                 pitch: 0,
                 bearing: 0,
                 speed: .5
@@ -410,7 +410,7 @@ var config = {
             description: "The manifestation of economic disparities in San Francisco is succinctly captured in the Average Household Income by Race, revealing distinct variations in income levels based on racial demographics. Across all neighborhoods, White households consistently earn a significantly higher income, surpassing the $100,000 mark annually. Asian households closely follow, maintaining a comparatively higher income level. In stark contrast, Black households in all neighborhoods experience markedly lower incomes, with the Sunset District exhibiting the lowest at $12,470 per year, a stark contrast to the hundreds of thousands earned by White households. This stark divide in income levels by race underscores the systemic economic challenges faced by Black households, contributing to the broader narrative of socio-economic inequality within the city.",
             location: {
                 center: [-122.55892, 37.75359],
-                zoom: 10.5,
+                zoom: 9.5,
                 pitch: 0,
                 bearing: 0,
                 speed: .5
@@ -426,7 +426,7 @@ var config = {
             description: "Examining House Value for All Owner-Occupied Housing Units offers a nuanced perspective on economic differences, particularly in terms of wealth retention, a critical factor for generational upward mobility. Consistent with previous data, the Bayview District and Excelsior & Crocker-Amazon stand out with the highest percentages of homes valued under 1 million dollars, reflecting a distinct economic landscape. It's important to note that San Francisco's housing market sustains generally high home values compared to other American cities, hence the categorization of 'less valuable' homes as those under 1 million. In the Bayview District, nearly 75% of homes fall into this category, indicating a significant prevalence of more affordable housing. A majority exists in Excelsior & Crocker-Amazon as well, with just over 50% of homes valued under 1 million. Conversely, in the more affluent neighborhoods of the Sunset District and the Richmond District, over 75% of homes are valued at over a million dollars, underlining a stark contrast in the economic capacity of residents to accumulate wealth through property ownership. This disparity in home values reinforces the broader economic divide within San Francisco, with implications for intergenerational wealth and mobility.",
             location: {
                 center: [-122.55892, 37.75359],
-                zoom: 10.5,
+                zoom: 9.5,
                 pitch: 0,
                 bearing: 0,
                 speed: .5
@@ -442,7 +442,7 @@ var config = {
             description: "The examination of disparities in access to reliable transportation underscores the intersectionality of social and economic challenges within San Francisco's neighborhoods. The neighborhoods with the most pronounced economic and social disadvantages often coincide with lower-quality public transportation options. Analyzing the percentage of residents relying on transit for their commute sheds light on the importance of transit systems for those dependent on them for their livelihoods. A comparison between the Bayview District and the Sunset District reveals a similar reliance on transit, both hovering around 32%. However, the quality of transit systems in these areas is not equivalent. Similarly, the Richmond District and Excelsior & Crocker-Amazon demonstrate a minimal difference in transit usage, approximately 34%. Nevertheless, Excelsior & Crocker-Amazon exhibits a significantly higher percentage of vehicle commutes, underscoring the need for improved and more reliable transportation options in this underserved neighborhood. This observation underscores the vital role that quality transportation plays in addressing socio-economic disparities, as it directly impacts the daily lives and economic opportunities of residents in these communities.",
             location: {
                 center: [-122.55892, 37.75359],
-                zoom: 10.5,
+                zoom: 9.5,
                 pitch: 0,
                 bearing: 0,
                 speed: .5
@@ -458,7 +458,7 @@ var config = {
             description: "Although differences in travel time can seem small, small amounts of time add up over many rides. For example, just 5 minutes of additional commute time in each direction on weekdays results in over 8 hours of extra time spent in transit over the course of a year. This is time that could be spent with family or making money, and the burden falls disproportionately on marginalized communities.",
             location: {
                 center: [-122.55892, 37.75359],
-                zoom: 10.5,
+                zoom: 9.5,
                 pitch: 0,
                 bearing: 0,
                 speed: .5
@@ -474,7 +474,7 @@ var config = {
             description: "Travel reliability is also a critical aspect of transit. While some jobs (such as those in San Francisco’s technology sector) offer flexibility and accommodate delays, service jobs may require strict adherence to schedules and have punishments for arriving late. Lower-income residents are more likely to be in service jobs, yet experience lower transit reliability. Students may also face repercussions from transportation delays, compounding already existing educational gaps between communities in San Francisco.",
             location: {
                 center: [-122.55892, 37.75359],
-                zoom: 10.5,
+                zoom: 9.5,
                 pitch: 0,
                 bearing: 0,
                 speed: .5
